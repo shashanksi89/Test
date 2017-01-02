@@ -1,0 +1,212 @@
+<aura:component implements="forceCommunity:availableForAllPageTypes" access="global" controller="CCP_OrderDataController">
+    <ltng:require styles="{!join(',', 
+                          $Resource.CCP_Resources + '/assets/stylesheets/inspira.css', 
+						  $Resource.CCP_Resources + '/assets/stylesheets/bootstrap.min.css', 
+                          $Resource.CCP_Resources + '/assets/stylesheets/font-awesome.min.css', 
+                          $Resource.CCP_Resources + '/assets/stylesheets/styles.css')}"
+                  />
+	
+	<ltng:require scripts="{!join(',', 
+                           $Resource.CCP_Resources + '/assets/scripts/ccp_scripts.js',
+						   $Resource.CCP_Resources + '/assets/scripts/jquery.min.js', 
+                           $Resource.CCP_Resources + '/assets/scripts/bootstrap.min.js')}"
+                  afterScriptsLoaded="{! c.scriptsLoaded }"
+                  />
+    
+    <aura:attribute name="orderDetails" type="Object" />
+    <aura:attribute name="urlGON" type="String" default="undefined" />
+    <aura:attribute name="dataFlag" type="Boolean" default="false" />
+    <aura:attribute name="scriptFlag" type="Boolean" default="false" />
+    <aura:attribute name="initialLoad" type="Boolean" default="false"/>
+    
+    <aura:registerEvent name="fetchInvoicesEvent" type="c:CCP_fetchInvoices"/>
+    
+    <aura:handler name="init" value="{!this}" action="{!c.doInit}" />
+    <aura:handler event="aura:doneRendering" action="{!c.doneRendering}"/>
+	<aura:handler event="c:CCP_shareInvoices" action="{!c.doProcessInvoices}" />
+    
+    <!--my orders with background image-->
+    <div class="ccp-top-banner-bg">
+        <p class="ccp-top-banner-text">ORDER DETAILS</p>
+    </div>
+    
+    <div id="orderLoadInfo">
+        <div class="ccp-loader"></div>
+        <div class="ccp-load-message">Loading order details... please wait</div>
+    </div>
+	
+	<!--Error Message-->
+	<div id="orderErrorSection" class="ccp-search-errror-msg"></div>
+    
+    <div id="orderDetailSection" style="display: none;">
+        <!--1ST SECTION -->
+        <div class="col-md-12 ccp-order-det-1st-sec clearfix">
+            <div class="col-md-8 ccp-orderdet-tab">
+                <div class="col-md-12 ccp-orderdet-ordrnum"><p class="ccp-ver-align ccp-orderdet-text"><span title="GE internal reference number of the order generated for your Purchase Order">ORDER NUMBER</span>: {! v.orderDetails.GON }</p></div>
+                <div class="col-md-12 ccp-orderdet-body">
+                    <div class="col-md-9">
+                        <div class="col-md-3 ccp-pad">
+                            <span class="ccp-card-label1" title="Reference number from your Purchase Order document">PO Number</span><br />
+                            <span class="ccp-card-label2 ccp-ellipsis" title="{! v.orderDetails.PONumber }">{! v.orderDetails.PONumber }</span>
+                        </div>	
+                        <div class="col-md-3 ccp-pad">
+                            <span class="ccp-card-label1" title="Order date as recorded within GE internal system">Order Date</span><br />
+                            <span class="ccp-card-label2">{! v.orderDetails.OrderApprovalDate }</span>
+                        </div>	
+                        <div class="col-md-3 ccp-pad">
+                            <span class="ccp-card-label1" title="GE internal reference number of the order generated for your Purchase Order">Order Number</span><br />
+                            <span class="ccp-card-label2 ccp-ellipsis" title="{! v.orderDetails.GON }">{! v.orderDetails.GON }</span>
+                        </div>	
+                        <div class="col-md-3 ccp-pad">
+                            <span class="ccp-card-label1" title="Indicates if the order status is open, completed, or cancelled.">Order Status</span><br />
+							<span class="ccp-card-label2 ccp-upper-text">{! v.orderDetails.OrderStatus }</span>
+                        </div>
+                    </div>
+                    <div class="col-md-3 ccp-pad">
+                        <span class=""><span class="ccp-card-label1" title="Total value of your order">Total Order Value</span><br />
+							<aura:if isTrue="{! v.orderDetails.TotalOrderValue lt 0 }">
+								<span class="ccp-card-price"><ui:outputCurrency value="{! -1 * v.orderDetails.TotalOrderValue }" 
+																format="{! '(' + v.orderDetails.currencyCode + ' #,##0.00)' }" /></span>
+								<aura:set attribute="else">
+									<span class="ccp-card-price"><ui:outputCurrency value="{! v.orderDetails.TotalOrderValue }" 
+																format="{! v.orderDetails.currencyCode + ' #,##0.00' }" /></span>
+								</aura:set>
+							</aura:if>
+                        </span>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4 ccp-shipping-tab">
+                <div class="col-md-12 ccp-orderdet-shipping-addr"><span class="ccp-ver-align" title="Company name and address as provided for shipment purposes">SHIPPING ADDRESS</span></div>
+                <div class="col-md-12 ccp-billing-addres-body">
+                    <div class="ccp-ver-align"><span class="ccp-shipping-titl ccp-ellipsis" title="{! v.orderDetails.CustomerName }">{! v.orderDetails.CustomerName }</span>
+                        <span class="ccp-shipping-addr-text ccp-ellipsis" title="{! v.orderDetails.addressLine1 }">{! v.orderDetails.addressLine1 }</span>
+                        <span class="ccp-shipping-addr-text ccp-ellipsis" title="{! v.orderDetails.addressLine2 }">{! v.orderDetails.addressLine2 }</span>
+                        <span class="ccp-shipping-addr-text ccp-ellipsis" title="{! v.orderDetails.addressLise3 }">{! v.orderDetails.addressLise3 }</span>
+                    </div>
+                </div>
+            </div>
+        </div>	
+        
+        <!--2ND SECTION-->
+        <div class="container-fluid ccp-viewdet-middle-sec">	
+			<div class="col-sm-12 ccp-fixed-top">
+				<div class="col-sm-1">
+					<span class="ccp-nowrap" title="Your order is divided into invoice groupings for items which should be invoiced as a set. This is a reference number of that invoicing set.">Shipment Set</span>
+				</div>
+				<div class="col-sm-2 ccp-fix-top-descri">
+					<span title="Description of items in this shipment set">Description</span>
+				</div>
+				<div class="col-sm-1 ccp-fix-top-amt">
+					<span title="Total value of items in this Shipment Set">Amount</span>
+				</div>
+				<div class="col-sm-7">
+					<div class="col-sm-4 ccp-fix-top-ship-addr">
+						<span title="Company name and address as provided for shipment purposes">Shipping Address</span>				
+					</div>
+					<div class="col-sm-8 ccp-track-header-left">
+						<div class="col-sm-3">
+							<span title="The date that the order is generated in GE">Initiated</span>				
+						</div>
+						<div class="col-sm-3">
+							<span title="Scheduled Shipment Date from GE (or) Actual Shipment date from GE">Shipped</span>				
+						</div>
+						<div class="col-sm-3">
+							<span title="Scheduled Delivery Date at your facility (or) Actual Delivery date at your facility">Delivered</span>				
+						</div>
+						<div class="col-sm-3">
+							<span title="The date when the order was closed in the GE systems">Completed</span>				
+						</div>
+					</div>
+				</div>
+				<div class="col-sm-1"></div>
+			</div>
+            <div class="ccp-scroll">
+                <div class="panel-group ccp-orderdetails-accordion" id="accordion">
+                    <aura:iteration items="{!v.orderDetails.Fsets}" var="item">
+                        <div class="panel ccp-accordion-panel">
+                            <div class="panel-heading ccp-orderdetails-accordion-header">
+                                <div class="col-sm-4 ccp-accord-left-wrapper">
+                                    <div class="col-sm-3 ccp-accord-border-left ccp-accord-bg ccp-accord-header-left">
+                                        <span class="ccp-ver-align">{! item.ShipmentSet }</span>
+                                    </div>
+                                    <div class="col-sm-5 ccp-accord-bg2">
+                                        <span class="ccp-ver-align">{! item.Description }</span>
+                                    </div>
+                                    <div class="col-sm-4 ccp-accord-bg">
+                                        <aura:if isTrue="{! item.Amount lt 0 }">
+											<span class="ccp-ver-align ccp-card-price"><ui:outputCurrency value="{! -1 * item.Amount }" 
+																	format="{! '(' + item.currencyCode + ' #,##0.00)' }" /></span>
+											<aura:set attribute="else">
+												<span class="ccp-ver-align ccp-card-price"><ui:outputCurrency value="{! item.Amount }" 
+																			format="{! item.currencyCode + ' #,##0.00' }" /></span>
+											</aura:set>
+										</aura:if>
+                                    </div>
+                                </div>
+                                <div class="col-sm-7 ccp-bg-white">
+                                    <div class="col-sm-4 ccp-shipping-addrs">
+                                        <span class="ccp-ver-align">
+                                            <span class="ccp-shipping-text ccp-ellipsis" title="{! v.orderDetails.CustomerName }">{! v.orderDetails.CustomerName }</span>
+                                            <span class="ccp-shipping-text ccp-ellipsis" title="{! item.addressLine1 }">{! item.addressLine1 }</span>
+                                            <span class="ccp-shipping-text ccp-ellipsis" title="{! item.addressLine2 }">{! item.addressLine2 }</span>
+                                            <span class="ccp-shipping-text ccp-ellipsis" title="{! item.addressLise3 }">{! item.addressLise3 }</span>
+                                        </span>
+                                    </div>
+                                    <div class="ccp-track col-sm-8 ccp-accord-bg" style="padding-bottom: 6px;">
+                                        <span class="ccp-ver-align">
+                                            
+                                            <aura:if isTrue="{! item.ShippingText != '' || item.DeliveryText != '' }">
+                                                <div class="bar"> </div>
+                                                <aura:set attribute="else">
+                                                    <div class="bar-2"> </div>
+                                                </aura:set>
+                                            </aura:if>
+                                            
+                                            <div class="col-sm-3">
+                                                <aura:if isTrue="{! item.ShippingText != '' || item.DeliveryText != '' }">
+                                                    <span class="ccp-track-opt1"></span><br/>
+                                                </aura:if>
+                                                <span class="circle_green ccp-track-opt2"></span><br/>
+                                                <span class="ccp-track-opt3">{! item.InititatedDate }</span>
+                                            </div>
+                                            <div class="col-sm-3">
+                                                <aura:if isTrue="{! item.ShippingText != '' || item.DeliveryText != '' }">
+                                                    <span class="ccp-track-opt1">{! item.ShippingText }</span><br/>
+                                                </aura:if>
+                                                <span class="{! 'ccp-track-opt2 ' + (item.isShippingComplete ? 'circle_green' : 'circle_empty') }"></span><br />
+                                                <span class="ccp-track-opt3">{! item.ShippedDate }</span>
+                                            </div>
+                                            <div class="col-sm-3">
+                                               <aura:if isTrue="{! item.ShippingText != '' || item.DeliveryText != '' }">
+                                                    <span class="ccp-track-opt1">{! item.DeliveryText }</span><br/>
+                                                </aura:if>
+                                                
+                                                <span class="{! 'ccp-track-opt2 ' + (item.isDeliveryComplete ? 'circle_green' : 'circle_empty') }"></span><br />
+                                                <span class="ccp-track-opt3">{! item.DeliveredDate }</span>
+                                            </div>
+                                            <div class="col-sm-3">
+                                                <aura:if isTrue="{! item.ShippingText != '' || item.DeliveryText != '' }">
+                                                    <span class="ccp-track-opt1"></span><br />
+                                                </aura:if>
+                                                <span class="{! 'ccp-track-opt2 ' + (item.CompletedDate != '' ? 'circle_green' : 'circle_empty') }"></span><br />
+                                                <span class="ccp-track-opt3">{! item.CompletedDate }</span>
+                                            </div>
+                                        </span>
+                                    </div>
+                                </div>
+                                <div class="col-sm-1 ccp-accord-bg3 ccp-accord-border-right">
+                                    <span class="ccp-ver-align">
+                                        <a id="{! 'acctoggle' + item.ShipmentSet }" data-parent="#accordion" class="accordion-toggle clscheck collapsed ccp-disabled"></a>
+                                    </span>
+                                </div>
+                            </div>
+                            <div id="{! 'collapse' + item.ShipmentSet }" class="panel-collapse collapse">
+                            </div>
+                        </div>
+                    </aura:iteration>
+                </div>
+            </div>
+        </div>
+    </div>
+</aura:component>

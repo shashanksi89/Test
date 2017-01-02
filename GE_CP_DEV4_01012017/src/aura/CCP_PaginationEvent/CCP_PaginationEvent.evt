@@ -1,0 +1,4 @@
+<aura:event type="COMPONENT" description="Event template" >
+    <aura:attribute name="type" type="String" default="Page Number"/>
+    <aura:attribute name="pageNum" type="Integer"/>
+</aura:event>

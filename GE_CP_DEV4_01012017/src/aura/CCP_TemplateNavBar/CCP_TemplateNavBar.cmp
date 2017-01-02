@@ -1,0 +1,27 @@
+<aura:component implements="forceCommunity:availableForAllPageTypes" access="global" >
+    <ltng:require scripts="{!join(',', 
+                           $Resource.CCP_Resources + '/assets/scripts/ccp_scripts.js',
+						   $Resource.CCP_Resources + '/assets/scripts/jquery.min.js')}"
+                  afterScriptsLoaded="{! c.scriptReady }"
+                  />
+	
+    <aura:attribute name="scriptFlag" type="Boolean" default="false" />
+	<aura:attribute name="initialLoad" type="Boolean" default="false" />
+    
+	<aura:handler event="aura:doneRendering" action="{!c.doneRendering}"/>
+	
+    <ul class="nav nav-pills nav-stacked">
+        <li id="li_0">
+			<a href="./" id="list_0"><img class="ccp-act_0" src="{!$Resource.CCP_Resources + '/assets/images/MyOrders_Inactive.png'}" alt="My Orders"/><br />
+			<span>MY ORDERS</span></a>
+        </li>
+        <li id="li_1">
+            <a href="./invoices" id="list_1"><img class="ccp-act_1" src="{!$Resource.CCP_Resources + '/assets/images/Invoices_Inactive.png'}" alt="Invoices" /><br />
+			<span>INVOICES</span></a>
+        </li>
+        <li id="li_5">
+            <a href="./contactus" id="list_5"><img class="ccp-act_5" src="{!$Resource.CCP_Resources + '/assets/images/ContactUs_Inactive.png'}" alt="Contact Us" /><br />
+			<span>CONTACT US</span></a>
+        </li>
+    </ul>
+</aura:component>

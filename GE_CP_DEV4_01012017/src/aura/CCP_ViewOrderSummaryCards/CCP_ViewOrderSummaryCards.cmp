@@ -1,0 +1,163 @@
+<aura:component implements="forceCommunity:availableForAllPageTypes" access="global" controller="CCP_OrderDataController">
+    <ltng:require styles="{!join(',', 
+                          $Resource.CCP_Resources + '/assets/stylesheets/inspira.css', 
+						  $Resource.CCP_Resources + '/assets/stylesheets/bootstrap.min.css', 
+                          $Resource.CCP_Resources + '/assets/stylesheets/bootstrap-select.min.css', 
+                          $Resource.CCP_Resources + '/assets/stylesheets/font-awesome.min.css', 
+                          $Resource.CCP_Resources + '/assets/stylesheets/jquery-ui.css', 
+                          $Resource.CCP_Resources + '/assets/stylesheets/slick.css', 
+                          $Resource.CCP_Resources + '/assets/stylesheets/slick-theme.css', 
+                          $Resource.CCP_Resources + '/assets/stylesheets/styles.css')}"
+                  />
+	
+	<ltng:require scripts="{!join(',', 
+                           $Resource.CCP_Resources + '/assets/scripts/ccp_scripts.js',
+						   $Resource.CCP_Resources + '/assets/scripts/jquery.min.js', 
+                           $Resource.CCP_Resources + '/assets/scripts/jquery-ui.min.js', 
+                           $Resource.CCP_Resources + '/assets/scripts/bootstrap.min.js', 
+                           $Resource.CCP_Resources + '/assets/scripts/bootstrap-select.min.js', 
+                           $Resource.CCP_Resources + '/assets/scripts/slick.js')}"
+				  afterScriptsLoaded="{! c.scriptsLoaded }"
+                  />
+    
+    <aura:attribute name="arrOrdersObj" type="Object" />
+    <aura:attribute name="datesObj" type="Object" />
+    <aura:attribute name="orderFilterObj" type="Object" />
+    <aura:attribute name="orderWrappersJSON" type="String" />
+    <aura:attribute name="orderSortType" type="String" default="OrderDate" />
+    <aura:attribute name="orderSortOrder" type="String" default="DESC" />
+	<aura:attribute name="searchInput" type="String" default="" />
+    <aura:attribute name="activeSlideNum" type="Integer" default="0" />
+    <aura:attribute name="activePageNum" type="Integer" default="1" />
+    <aura:attribute name="activeGON" type="String" />
+    <aura:attribute name="comingFromNavFlag" type="Boolean" default="true" />
+    <aura:attribute name="comingFromResizeFlag" type="Boolean" default="false" />
+    <aura:attribute name="edgeSwipeFlag" type="Boolean" default="false" />
+    <aura:attribute name="scriptFlag" type="Boolean" default="false" />
+    <aura:attribute name="dataFlag" type="Boolean" default="false" />
+	<aura:attribute name="initialLoad" type="Boolean" default="false" />
+	<aura:attribute name="manualDefaultFlag" type="Boolean" default="false" />
+    
+    <aura:registerEvent name="fetchInvoicesEvent" type="c:CCP_fetchInvoices"/>
+    <aura:registerEvent name="pageEvent" type="c:CCP_PaginationEvent"/>
+    <aura:registerEvent name="cardClickEvent" type="c:CCP_CardClickEvent"/>
+    
+    <aura:handler name="init" value="{!this}" action="{!c.doInit}" />
+	<aura:handler event="aura:doneRendering" action="{!c.doneRendering}"/>
+    <aura:handler name="pageEvent" event="c:CCP_PaginationEvent" action="{!c.doNavToCardPage}"/>
+    <aura:handler name="cardClickEvent" event="c:CCP_CardClickEvent" action="{!c.doHandleCardClick}"/>
+    
+	<div id ="orderSummaryComp">
+		<div class="ccp-top-banner-bg">
+			<p class="ccp-top-banner-text">MY ORDERS</p>
+		</div>
+		
+		<div id="orderToolsDiv" class="ccp-search-sort-filter"><!--search sort and filter-->
+			<div class="row">
+				<div class="pull-right">
+					<!--search-->
+					<div class="ccp-search">
+						<div class="input-group">
+							<input type="text" id="orderSearchText" class="form-control ccp-search-box" placeholder="" disabled="true" />
+							<span class="input-group-btn">
+								<button id="orderSearchButton" disabled="true" class="btn btn-default ccp-search-btn" type="button" onclick="{!c.doSearchOrders}"><img class="ccp-search-icon" src="{!$Resource.CCP_Resources + '/assets/images/Search.png'}" alt="Search" /></button>
+							</span>
+						</div>
+					</div>
+					<!--sort-->
+					<div class="btn-group ccp-sort"> 
+						<label class="ccp-srt-lbl">Sort By :&nbsp;</label>
+						<select id="orderSort" disabled="true" class="ccp-sort-selectlist" onchange="{!c.doSortOrders}">			
+							<optgroup class="ccp-sl-label" label="Total Order Value">
+								<option value="orderValAsc">Smallest to Largest</option>
+								<option value="orderValDesc">Largest to Smallest</option>
+							</optgroup>
+							<optgroup class="ccp-sl-label" label="Order Date">
+								<option value="orderDateAsc">Oldest to Newest</option>
+								<option selected="selected" value="orderDateDesc" >Newest to Oldest</option>
+							</optgroup>
+							<optgroup class="ccp-sl-label" label="Order Status">
+								<option value="orderStatusOpen">Open-Closed-Cancelled</option>
+								<option value="orderStatusClosed">Closed-Open-Cancelled</option>
+							</optgroup>	
+							<optgroup class="ccp-sl-label" label="Customer Name">
+								<option value="cNameAsc">A-Z Ascending</option>
+								<option value="cNameDesc">Z-A Descending</option>
+							</optgroup>
+						</select>
+					</div>
+					<!--filter-->
+					<div class="btn-group ccp-order-filter">
+						<span id="orderFilterDropdown">
+							<button id="order-filter-button" disabled="true" type="button" class="btn btn-default btn-md ccp-filter-btn " data-toggle="dropdown"><span>Filter</span></button>
+							<ul class="dropdown-menu dropdown-menu-right ccp-filtering">
+								<li><label class="ccp-label">Order Date</label></li>
+								<li><input type="radio" name="orderDateFilter" id="order-Last-30-Days" value="Last-30-Days" onclick="{!c.disableDateRange}" /><label for="order-Last-30-Days">Last 30 days</label></li>
+								<li><input type="radio" name="orderDateFilter" id="order-Last-60-Days" value="Last-60-Days" onclick="{!c.disableDateRange}" /><label for="order-Last-60-Days">Last 60 days</label></li>
+								<li class="ccp-date">
+									<div class="ccp-fromcal">
+										<input type="radio" name="orderDateFilter" id="order-Date-Range" value="Calender" onclick="{!c.enableDateRange}" />
+										<label for="order-Date-Range">From </label>
+										<input type="text" id="orderFromDate" class="ccp-cal1" readonly="readonly" disabled="true" />
+										<input type="hidden" id="orderFromAltDate" value="" />
+									</div>
+									<div class="ccp-tocal">
+										<label for="order-Date-Range"> To </label>
+										<input type="text" id="orderToDate" class="ccp-cal1" readonly="readonly" disabled="true" />
+										<input type="hidden" id="orderToAltDate" value="" />
+									</div>
+								</li>
+								<hr />
+								<li><label class="ccp-label">Order Status</label></li>
+								<li><input type="checkbox" name="orderStatusFilter" id="order-Open" value="Open" /><label for="order-Open">Open</label></li>
+								<li><input type="checkbox" name="orderStatusFilter" id="order-Closed" value="Closed" /><label for="order-Closed">Closed</label></li>
+								<li><input type="checkbox" name="orderStatusFilter" id="order-Cancelled" value="Cancelled" /><label for="order-Cancelled">Cancelled</label></li>
+								<hr />
+								<div class="ccp-filter-inside-btns">
+									<button type="button" class="btn btn-primary ccp-filter-apply" onclick="{!c.doApplyFilters}">APPLY</button>
+									<button type="button" class="btn btn-default ccp-filter-reset" onclick="{!c.doClearFilters}">RESET</button>
+								</div>
+							</ul>
+						</span>
+					</div><!--filter ends-->
+				</div><!--search sort filter col ends-->
+			</div> <!--row ends-->
+		</div><!--search sort and filter ends-->
+		
+		<!--load spinner-->
+		<div id="orderLoadInfo">
+			<div class="ccp-loader"></div>
+			<div class="ccp-load-message">Loading orders... please wait</div>
+		</div>
+		
+		<!--filter pills-->
+		<div id="orderPillsSection" class="ccp-filter-pills-div">
+			<label id="orderPill30Days" class="ccp-filter-pill"><span>Order Date: Last 30 days</span>
+				<span class="ccp-filter-close" id="order-x-30" onclick="{!c.doRemoveFilter}"> x</span></label>
+			<label id="orderPill60Days" class="ccp-filter-pill"><span>Order Date: Last 60 days</span>
+				<span class="ccp-filter-close" id="order-x-60" onclick="{!c.doRemoveFilter}"> x</span></label>
+			<label id="orderPillDateRange" class="ccp-filter-pill"><span id="orderPillRangeText"></span>
+				<span class="ccp-filter-close" id="order-x-range" onclick="{!c.doRemoveFilter}"> x</span></label>
+			<label id="orderPillOpen" class="ccp-filter-pill"><span>Order Status: Open</span>
+				<span class="ccp-filter-close" id="order-x-open" onclick="{!c.doRemoveFilter}"> x</span></label>
+			<label id="orderPillClosed" class="ccp-filter-pill"><span>Order Status: Closed</span>
+				<span class="ccp-filter-close" id="order-x-closed" onclick="{!c.doRemoveFilter}"> x</span></label>
+			<label id="orderPillCancelled" class="ccp-filter-pill"><span>Order Status: Cancelled</span>
+				<span class="ccp-filter-close" id="order-x-cancelled" onclick="{!c.doRemoveFilter}"> x</span></label>
+			<button id="orderPillClearAll" class="ccp-filter-clearall btn btn-warning" onclick="{!c.doClearFilters}">RESET</button>
+		</div>
+		
+		<!--Error Message-->
+		<div id="orderErrorSection" class="ccp-search-errror-msg"></div>
+		
+		<!--carousel-->
+		<div id="orderCarouselSection"></div>
+		
+		<!--pagination-->
+		<div id="orderPageSection" class="ccp-order-pagination">
+			<div class="ccp-order-page">
+				<ul class="order-pagination" id="orderPages"></ul>
+			</div>
+		</div>
+	</div>
+</aura:component>

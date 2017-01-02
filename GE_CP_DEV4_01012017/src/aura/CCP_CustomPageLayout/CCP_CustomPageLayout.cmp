@@ -1,0 +1,16 @@
+<aura:component implements="forceCommunity:layout" access="global">
+    <aura:attribute name="column1" type="Aura.Component[]" required="false"></aura:attribute>
+    <aura:attribute name="column2" type="Aura.Component[]" required="false"></aura:attribute>
+    <div class="ccp-body" id="mainContentContainer">
+        <div class="ccp-body-container">	
+            <div id="side-nav" class="ccp-sidenav"><!-- fixed side navigation -->
+                <div class="ccp-sidenav-wrapper">
+					{!v.column1}
+				</div>
+            </div>
+            <div class="ccp-body-main"><!-- body main content -->
+                {!v.column2}
+            </div><!-- ccp-body-main end -->
+        </div><!-- ccp-body-container end -->
+    </div><!-- ccp-body end -->
+</aura:component>

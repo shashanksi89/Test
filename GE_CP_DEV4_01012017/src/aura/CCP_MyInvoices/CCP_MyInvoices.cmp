@@ -1,0 +1,252 @@
+<aura:component implements="forceCommunity:availableForAllPageTypes" access="global" controller="CCP_InvoiceDataController">
+    <ltng:require styles="{!join(',', 
+                          $Resource.CCP_Resources + '/assets/stylesheets/inspira.css', 
+						  $Resource.CCP_Resources + '/assets/stylesheets/bootstrap.min.css', 
+						  $Resource.CCP_Resources + '/assets/stylesheets/bootstrap-select.min.css', 
+                          $Resource.CCP_Resources + '/assets/stylesheets/font-awesome.min.css', 
+                          $Resource.CCP_Resources + '/assets/stylesheets/jquery-ui.css', 
+                          $Resource.CCP_Resources + '/assets/stylesheets/slick.css', 
+                          $Resource.CCP_Resources + '/assets/stylesheets/slick-theme.css', 
+                          $Resource.CCP_Resources + '/assets/stylesheets/styles.css')}"
+                  />
+	
+	<ltng:require scripts="{!join(',', 
+                           $Resource.CCP_Resources + '/assets/scripts/ccp_scripts.js',
+						   $Resource.CCP_Resources + '/assets/scripts/jquery.min.js', 
+                           $Resource.CCP_Resources + '/assets/scripts/jquery-ui.min.js', 
+                           $Resource.CCP_Resources + '/assets/scripts/bootstrap.min.js', 
+						   $Resource.CCP_Resources + '/assets/scripts/bootstrap-select.min.js', 
+                           $Resource.CCP_Resources + '/assets/scripts/slick.js')}"
+                  afterScriptsLoaded="{! c.scriptsLoaded }"
+                  />
+    
+    <aura:attribute name="arrInvoicesObj" type="Object" />
+	<aura:attribute name="datesObj" type="Object" />
+	<aura:attribute name="invoiceFilterObj" type="Object" />
+	<aura:attribute name="invoiceWrappersJSON" type="String"/>
+	<aura:attribute name="invoiceSortType" type="String" default="InvoiceDate" />
+	<aura:attribute name="invoiceSortOrder" type="String" default="DESC" />
+	<aura:attribute name="searchInput" type="String" default="" />
+	<aura:attribute name="chunkSize" type="Integer" default="0" />
+	<aura:attribute name="currentOffset" type="Integer" default="0" />
+	<aura:attribute name="totalRecords" type="Integer" default="0" />
+	<aura:attribute name="activeSlideNum" type="Integer" default="0" />
+	<aura:attribute name="activePageNum" type="Integer" default="1" />
+	<aura:attribute name="activeGON" type="string" default="" />
+	<aura:attribute name="activeFSET" type="string" default="" />
+	<aura:attribute name="activeINV" type="string" default="" />
+	<aura:attribute name="comingFromNavFlag" type="Boolean" default="true" />
+	<aura:attribute name="comingFromResizeFlag" type="Boolean" default="false" />
+	<aura:attribute name="edgeSwipeFlag" type="Boolean" default="false" />
+	<aura:attribute name="scriptFlag" type="Boolean" default="false" />
+	<aura:attribute name="dataFlag" type="Boolean" default="false" />
+	<aura:attribute name="initialLoad" type="Boolean" default="false" />
+	<aura:attribute name="manualDefaultFlag" type="Boolean" default="false" />
+	<aura:attribute name="serverPageFlag" type="Boolean" default="false" />
+	<aura:attribute name="serverPageNum" type="Integer" default="0" />
+	<aura:attribute name="orderDetails" type="Object" />
+    
+	<aura:registerEvent name="cardClickEvent" type="c:CCP_CardClickEvent"/>
+	<aura:registerEvent name="pageEvent" type="c:CCP_PaginationEvent"/>
+    
+    <aura:handler name="init" value="{!this}" action="{!c.doInit}" />
+	<aura:handler event="aura:doneRendering" action="{!c.doneRendering}"/>
+    <aura:handler name="pageEvent" event="c:CCP_PaginationEvent" action="{!c.doNavToCardPage}"/>
+	<aura:handler name="cardClickEvent" event="c:CCP_CardClickEvent" action="{!c.doHandleCardClick}"/>
+    
+    <div id ="myInvoicesComp">
+		<div class="ccp-top-banner-bg">
+			<p class="ccp-top-banner-text">INVOICES</p>
+		</div>
+		
+		<div id="invoiceToolsDiv" class="ccp-search-sort-filter"><!--search sort and filter-->
+			<div class="row">
+				<div class="pull-right">
+					<!--search-->
+					<div class="ccp-search">
+						<div id="invoiceSearchGroup" class="input-group">
+							<input type="text" id="invoiceSearchText" class="form-control ccp-search-box" placeholder="" disabled="true" />
+							<span class="input-group-btn">
+								<button id="invoiceSearchButton" disabled="true" class="btn btn-default ccp-search-btn" type="button" onclick="{!c.doSearchInvoices}"><img class="ccp-search-icon" src="{!$Resource.CCP_Resources + '/assets/images/Search.png'}" alt="Search" /></button>
+							</span>
+						</div>
+					</div>
+					<!--sort-->
+					<div class="btn-group ccp-sort"> 
+						<label class="ccp-srt-lbl">Sort By :&nbsp;</label>
+						<select id="invoiceSort" disabled="true" class="ccp-sort-selectlist" onchange="{!c.doSortInvoices}">			
+							<optgroup class="ccp-sl-label" label="Invoice Amount">
+								<option value="invoiceValAsc">Smallest to Largest</option>
+								<option value="invoiceValDesc">Largest to Smallest</option>
+							</optgroup>
+							<optgroup class="ccp-sl-label" label="Invoice Date">
+								<option value="invoiceDateAsc">Oldest to Newest</option>
+								<option selected="selected" value="invoiceDateDesc" >Newest to Oldest</option>
+							</optgroup>
+							<optgroup class="ccp-sl-label" label="Invoice Status" >
+								<option value="invoiceStatusDesc">Open-Closed</option>
+								<option value="invoiceStatusAsc">Closed-Open</option>
+							</optgroup>
+						</select>
+					</div>
+					<!--filter-->
+					<div class="btn-group ccp-order-filter">
+						<span id="invoiceFilterDropdown">
+							<button id="invoice-filter-button" disabled="true" type="button" class="btn btn-default btn-md ccp-filter-btn" data-toggle="dropdown"><span>Filter</span></button>
+							<ul class="dropdown-menu dropdown-menu-right ccp-filtering">
+								<li><label class="ccp-label">Invoice Date</label></li>
+								<li><input type="radio" name="invoiceDateFilter" id="invoice-Last-30-Days" value="Last-30-Days" onclick="{!c.disableDateRange}" /><label for="invoice-Last-30-Days">Last 30 days</label></li>
+								<li><input type="radio" name="invoiceDateFilter" id="invoice-Last-60-Days" value="Last-60-Days" onclick="{!c.disableDateRange}" /><label for="invoice-Last-60-Days">Last 60 days</label></li>
+								<li class="ccp-date">
+									<div class="ccp-fromcal">
+										<input type="radio" name="invoiceDateFilter" id="invoice-Date-Range" value="Calender" onclick="{!c.enableDateRange}" />
+										<label for="invoice-Date-Range">From </label>
+										<input type="text" id="invoiceFromDate" class="ccp-cal1" readonly="readonly" disabled="disabled" />
+										<input type="hidden" id="invoiceFromAltDate" value="" />
+									</div>
+									<div class="ccp-tocal">
+										<label for="invoice-Date-Range"> To </label>
+										<input type="text" id="invoiceToDate" class="ccp-cal1" readonly="readonly" disabled="disabled" />
+										<input type="hidden" id="invoiceToAltDate" value="" />
+									</div>
+								</li>
+								<hr />
+								<li><label class="ccp-label">Invoice Status</label></li>
+								<li><input type="checkbox" name="invoiceStatusFilter" id="invoice-Open" value="Open" /><label for="invoice-Open">Open</label></li>
+								<li><input type="checkbox" name="invoiceStatusFilter" id="invoice-Closed" value="Closed" /><label for="invoice-Closed">Closed</label></li>
+								<hr />
+								<div class="ccp-filter-inside-btns">
+									<button type="button" class="btn btn-primary ccp-filter-apply" onclick="{!c.doApplyFilters}">APPLY</button>
+									<button type="button" class="btn btn-default ccp-filter-reset" onclick="{!c.doClearFilters}">RESET</button>
+								</div>
+							</ul>
+						</span>
+					</div><!--filter ends-->
+				</div><!--search sort filter col ends-->
+			</div> <!--row ends-->
+		</div><!--search sort and filter ends-->
+		
+		<!--load spinner-->
+		<div id="invoiceLoadInfo">
+			<div class="ccp-loader"></div>
+			<div class="ccp-load-message">Loading invoices... please wait</div>
+		</div>
+		
+		<!--filter pills-->
+		<div id="invoicePillsSection" class="ccp-filter-pills-div">
+			<label id="invoicePill30Days" class="ccp-filter-pill"><span>Invoice Date: Last 30 days</span>
+				<span class="ccp-filter-close" id="invoice-x-30" onclick="{!c.doRemoveFilter}"> x</span></label>
+			<label id="invoicePill60Days" class="ccp-filter-pill"><span>Invoice Date: Last 60 days</span>
+				<span class="ccp-filter-close" id="invoice-x-60" onclick="{!c.doRemoveFilter}"> x</span></label>
+			<label id="invoicePillDateRange" class="ccp-filter-pill"><span id="invoicePillRangeText"></span>
+				<span class="ccp-filter-close" id="invoice-x-range" onclick="{!c.doRemoveFilter}"> x</span></label>
+			<label id="invoicePillOpen" class="ccp-filter-pill"><span>Invoice Status: Open</span>
+				<span class="ccp-filter-close" id="invoice-x-open" onclick="{!c.doRemoveFilter}"> x</span></label>
+			<label id="invoicePillClosed" class="ccp-filter-pill"><span>Invoice Status: Closed</span>
+				<span class="ccp-filter-close" id="invoice-x-closed" onclick="{!c.doRemoveFilter}"> x</span></label>
+			<button id="invoicePillClearAll" class="ccp-filter-clearall btn btn-warning" onclick="{!c.doClearFilters}">RESET</button>
+		</div>
+		
+		<!--Error Message-->
+		<div id="invoiceErrorSection" class="ccp-search-errror-msg"></div>
+		
+		<!--carousel-->
+		<div id="invoiceCarouselSection"></div>
+		
+		<!--pagination-->
+		<div id="invoicePageSection" class="ccp-order-pagination">
+			<div class="ccp-order-page">
+				<ul class="order-pagination" id="invoicePages"></ul>
+			</div>
+		</div>
+		
+		<!--ORDER DETAILS-->
+		<div id="orderDetailsSection" style="display: none;">
+			<div class="ccp-ord-det-invoice-head">
+				<span class="ccp-ver-align">
+					Order Details for Invoice Number: {! v.activeINV }
+				</span>
+			</div>
+			
+			<!--load spinner-->
+			<div id="orderLoadInfo">
+				<div class="ccp-loader"></div>
+				<div class="ccp-load-message">Loading order details... please wait</div>
+			</div>
+			
+			<!--Error Message-->
+			<div id="orderErrorSection" class="ccp-search-errror-msg"></div>
+			
+			<div id="orderDetailsDiv" class="col-md-12 ccp-inv ccp-order-det-1st-sec clearfix">
+				<div class="col-md-9 ccp-inv-tab ccp-orderdet-tab">
+					<div class="col-md-12 ccp-orderdet-ordrnum">
+						<p class="ccp-ver-align ccp-orderdet-text"><span title="GE internal reference number of the order generated for your Purchase Order">ORDER NUMBER</span>: {! v.orderDetails.GON }</p>
+					</div>
+					<div class="col-md-12 ccp-orderdet-body">
+						<div class="col-md-9">
+							<div class="col-md-2 ccp-inv-pad ccp-pad">
+								<span class="ccp-card-label1" title="Reference number of the Purchase Order placed by you">PO Number</span><br />
+								<span class="ccp-card-label2 ccp-ellipsis" title="{! v.orderDetails.PONumber }">{! v.orderDetails.PONumber }</span>
+							</div>	
+							<div class="col-md-3 ccp-pad">
+								<span class="ccp-card-label1" title="Order date as recorded within GE internal system">Order Date</span><br />
+								<span class="ccp-card-label2">{! v.orderDetails.OrderApprovalDate }</span>
+							</div>	
+							<div class="col-md-2 ccp-pad">
+								<span class="ccp-card-label1" title="GE internal reference number of the order generated for your Purchase Order">Order Number</span><br />
+								<aura:if isTrue="{!v.orderDetails.GON != ''}">
+									<span class="ccp-card-label2"><a class="ccp-ellipsis" title="{! v.orderDetails.GON }" 
+										href="{! 'orderdetails?on=' + v.orderDetails.GON }">{! v.orderDetails.GON }</a></span>
+									<aura:set attribute="else">
+										<span class="ccp-card-label2"></span>
+									</aura:set>
+								</aura:if>
+							</div>	
+							<div class="col-md-2 ccp-pad">
+								<span class="ccp-card-label1" title="Your order is divided into invoice groupings for items which should be invoiced as a set. This is a reference number of that invoicing set.">Shipment Set</span><br />
+								<span class="{! v.orderDetails.InvoiceFSet != 'Not Available' ? 'ccp-card-label2' : 'ccp-bold' }">{! v.orderDetails.InvoiceFSet }</span>
+							</div>
+							<div class="col-md-3 ccp-pad">
+								<span class="ccp-card-label1" title="Status of an Order - Open, Cancelled or Closed">Order Status</span><br />
+								<span class="ccp-card-label2 ccp-upper-text">{! v.orderDetails.OrderStatus }</span>
+							</div>
+						</div>
+						<div class="col-md-3 ccp-pad">
+							<span class="ccp-card-label1" title="Total value of items in the Shipment Set that the Invoice is associated with">Amount</span><br />
+							<aura:if isTrue="{! v.orderDetails.InvoiceFSet == 'Not Available' }">
+								<span class="ccp-bold">Not Available</span>
+								<aura:set attribute="else">
+									<aura:if isTrue="{! v.orderDetails.InvoiceFSetAmount lt 0 }">
+										<span class="ccp-card-price"><ui:outputCurrency value="{! -1 * v.orderDetails.InvoiceFSetAmount }" 
+																		format="{! '(' + v.orderDetails.currencyCode + ' #,##0.00)' }" /></span>
+										<aura:set attribute="else">
+											<span class="ccp-card-price"><ui:outputCurrency value="{! v.orderDetails.InvoiceFSetAmount }" 
+																		format="{! v.orderDetails.currencyCode + ' #,##0.00' }" /></span>
+										</aura:set>
+									</aura:if>
+								</aura:set>
+							</aura:if>
+						</div>	
+					</div>	
+				</div>
+				<div class="col-md-3 ccp-inv-tab2 clearfix">
+					<div class="col-md-12 ccp-orderdet-shipping-addr"><span class="ccp-ver-align" title="Company name and address as provided for shipment purposes">SHIPPING ADDRESS</span></div>
+					<div class="col-md-12 ccp-billing-addres-body">
+						<span class="ccp-ver-align">
+							<aura:if isTrue="{! v.orderDetails.CustomerName == 'Not Available' }">
+								<span class="ccp-bold">{! v.orderDetails.CustomerName }</span>
+								<aura:set attribute="else">
+									<span class="ccp-shipping-titl ccp-ellipsis" title="{! v.orderDetails.CustomerName }">{! v.orderDetails.CustomerName }</span>
+									<span class="ccp-shipping-addr-text ccp-ellipsis" title="{! v.orderDetails.addressLine1 }">{! v.orderDetails.addressLine1 }</span>
+									<span class="ccp-shipping-addr-text ccp-ellipsis" title="{! v.orderDetails.addressLine2 }">{! v.orderDetails.addressLine2 }</span>
+									<span class="ccp-shipping-addr-text ccp-ellipsis" title="{! v.orderDetails.addressLise3 }">{! v.orderDetails.addressLise3 }</span>
+								</aura:set>
+							</aura:if>
+						</span>
+					</div>
+				</div>
+			</div>
+			<div class="clearfix"></div>
+		</div>
+    </div>
+</aura:component>

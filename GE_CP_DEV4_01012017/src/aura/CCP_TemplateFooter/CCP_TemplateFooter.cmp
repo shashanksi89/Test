@@ -1,0 +1,10 @@
+<aura:component implements="forceCommunity:availableForAllPageTypes" access="global">
+    <div class="ccp-footer" id="footerSection">
+		<div class="col-sm-6 ccp-footer-links"><a href="http://www.ge.com/privacy" target="_blank">Privacy Policy</a>
+			<i class="fa fa-circle ccp-footer-dot" aria-hidden="true"></i>
+			<a href="http://www3.gehealthcare.com/en/footer/terms_and_conditions" target="_blank">Terms &amp; Conditions </a>
+			<i class="fa fa-circle ccp-footer-dot" aria-hidden="true"></i>
+			<a href="http://www3.gehealthcare.com/en/about_us/data_usage_and_privacy" target="_blank">Data Usage Policy</a></div>
+		<div class="col-sm-6 ccp-copyright">2016 © GENERAL ELECTRIC. All Rights Reserved.</div>
+    </div>
+</aura:component>

@@ -1,0 +1,68 @@
+<aura:component implements="forceCommunity:availableForAllPageTypes" access="global" controller="CCP_TemplateHeaderController">
+<!--
+/*******************************************************************
+Change History
+
+Changed: 20/Oct/16 Saurabh Deep
+Defect: SIT Defects # 002, 007 and 010
+Desc: Removed dropdown image next to User Name and updated the log out URL
+*******************************************************************/
+-->
+    <ltng:require styles="{!join(',', 
+                          $Resource.CCP_Resources + '/assets/stylesheets/inspira.css', 
+						  $Resource.CCP_Resources + '/assets/stylesheets/bootstrap.min.css', 
+                          $Resource.CCP_Resources + '/assets/stylesheets/bootstrap-select.min.css', 
+                          $Resource.CCP_Resources + '/assets/stylesheets/font-awesome.min.css', 
+                          $Resource.CCP_Resources + '/assets/stylesheets/jquery-ui.css', 
+                          $Resource.CCP_Resources + '/assets/stylesheets/slick.css', 
+                          $Resource.CCP_Resources + '/assets/stylesheets/slick-theme.css', 
+                          $Resource.CCP_Resources + '/assets/stylesheets/styles.css')}"
+                  />
+	
+	<ltng:require scripts="{!join(',', 
+                           $Resource.CCP_Resources + '/assets/scripts/ccp_scripts.js',
+						   $Resource.CCP_Resources + '/assets/scripts/jquery.min.js', 
+                           $Resource.CCP_Resources + '/assets/scripts/jquery-ui.min.js', 
+                           $Resource.CCP_Resources + '/assets/scripts/bootstrap.min.js', 
+                           $Resource.CCP_Resources + '/assets/scripts/bootstrap-select.min.js', 
+                           $Resource.CCP_Resources + '/assets/scripts/slick.js')}"
+				  afterScriptsLoaded="{! c.scriptsLoaded }"
+                  />
+    
+    <aura:attribute name="scriptFlag" type="Boolean" default="false" />
+	<aura:attribute name="initialLoad" type="Boolean" default="false" />
+    <aura:attribute name="loggedInUserName" type="string" default=""/>
+    <aura:attribute name="headerDisclaimer" type="string" default=""/>
+    
+    <aura:handler event="aura:doneRendering" action="{!c.doneRendering}"/>
+    <aura:handler name="init" value="{!this}" action="{!c.doInit}" />
+	<aura:handler event="aura:systemError" action="{!c.onSystemError}"/>
+    
+    <div style="position: fixed; top: -1000px; left: -1000px; font-family: 'GE Inspira Sans';">GE Font Preload</div>
+	<div style="position: fixed; top: -1100px; left: -1100px; font-family: 'GE Inspira Sans'; font-weight: bold;">GE Bold Font Preload</div>
+	<!--fixed top header-->
+    <div class="ccp-fixed-header" id="headerOuterContainer">
+        <div class="navbar navbar-default navbar-fixed-top" id="headerInnerContainer">
+            <div class="container">
+                <div>
+                    <img alt="GE" class="ccp-logo" src="{!$Resource.CCP_Resources + '/assets/images/GELogo.png'}" />
+                    <p class="ccp-titl">myGEHealthcare Orders and Invoices</p>
+                </div>
+                <div class="navbar-header">
+                    <button type="button" class="navbar-toggle" data-toggle="collapse" data-target="#myNavbar">
+                        <span class="icon-bar"></span>
+                        <span class="icon-bar"></span>
+                        <span class="icon-bar"></span>
+                    </button>
+                </div>
+                <div class="collapse navbar-collapse" id="myNavbar">
+                    <ul class="nav navbar-nav navbar-right">
+                        <li class="ccp-username-in-header"><span class="ccp-welcome">Welcome</span><span class="ccp-user-name">{!v.loggedInUserName}</span></li>
+                        <li class="ccp-hdr-logout"><a href="../secur/logout.jsp">Logout<img src="{!$Resource.CCP_Resources + '/assets/images/Logout.png'}" class="ccp-img-logout" alt="Logout" width="24" height="24" /></a></li>
+                    </ul>
+                </div>
+            </div>
+			<div id="headerMessageDiv" class="headerMessage" style="display:none;"><aura:unescapedHtml value="{! v.headerDisclaimer  }" /></div>
+        </div>
+    </div>
+</aura:component>

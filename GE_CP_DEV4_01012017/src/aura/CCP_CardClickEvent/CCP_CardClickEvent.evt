@@ -1,0 +1,5 @@
+<aura:event type="COMPONENT" description="Event template" >
+    <aura:attribute name="GON" type="String"/>
+    <aura:attribute name="InvNum" type="String"/>
+    <aura:attribute name="FSetNum" type="String"/>
+</aura:event>

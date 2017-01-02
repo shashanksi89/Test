@@ -1,0 +1,14 @@
+eclipse.preferences.version=1
+endpointApiVersion=37.0
+endpointEnvironment=Sandbox
+endpointServer=test.salesforce.com
+httpsProtocol=true
+ideVersion=37.0
+keependpoint=false
+metadataFormatVersion=37.0
+namespacePrefix=
+packageName=unpackaged
+preferToolingDeployment=true
+projectIdentifier=IDE35761934034029856
+readTimeout=400
+username=shashank.singhal@gehc.amer.dev4

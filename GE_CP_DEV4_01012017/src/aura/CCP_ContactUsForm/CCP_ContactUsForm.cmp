@@ -1,0 +1,108 @@
+<aura:component implements="forceCommunity:availableForAllPageTypes" access="global" controller="CCP_ContactUsController">
+    <ltng:require styles="{!join(',', 
+                          $Resource.CCP_Resources + '/assets/stylesheets/inspira.css', 
+						  $Resource.CCP_Resources + '/assets/stylesheets/bootstrap.min.css', 
+						  $Resource.CCP_Resources + '/assets/stylesheets/bootstrap-select.min.css', 
+                          $Resource.CCP_Resources + '/assets/stylesheets/font-awesome.min.css', 
+                          $Resource.CCP_Resources + '/assets/stylesheets/styles.css')}"
+                  />
+	
+	<ltng:require scripts="{!join(',', 
+                           $Resource.CCP_Resources + '/assets/scripts/ccp_scripts.js',
+						   $Resource.CCP_Resources + '/assets/scripts/jquery.min.js', 
+                           $Resource.CCP_Resources + '/assets/scripts/bootstrap.min.js',
+						   $Resource.CCP_Resources + '/assets/scripts/bootstrap-select.min.js')}"
+                  afterScriptsLoaded="{! c.scriptReady }"
+                  />
+    
+	<aura:attribute name="scriptFlag" type="Boolean" default="false" />
+	<aura:attribute name="dataFlag" type="Boolean" default="false" />
+    <aura:attribute name="defaultUser" type="User"/>
+    
+    <aura:handler name="init" value="{!this}" action="{!c.doInit}" />
+    
+	<div class="ccp-top-banner-bg">
+        <p class="ccp-top-banner-text">CONTACT US</p>
+    </div>
+    
+	<!--load spinner-->
+	<div id="contactLoadInfo">
+		<div class="ccp-loader"></div>
+		<div id="loadMessageDiv" class="ccp-load-message">Loading... please wait</div>
+	</div>
+	
+	<!--Error Message-->
+	<div id="contactErrorSection" class="ccp-search-errror-msg"></div>
+	
+	<!--Thank You Section-->
+    <div id="thankYouSection" class="container-fluid ccp-con-us-popup">
+        <div class="col-md-9">
+            <div class="ccp-contact-page">
+                <div class="ccp-contact_panel-heading">
+                    <span class="ccp-ver-align">Thank you</span>
+                </div>
+                <div class="ccp-popup-body">
+                    <span class="ccp-ver-align">Your question/request has been submitted and you should soon receive a response from a GE representative / IT technical support team.</span>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+	<!--Main Form-->
+    <div id="contactFormSection" class="container-fluid ccp-contact" style="display: none;">
+        <div class="col-md-9">
+            <div class="ccp-contact-page">
+                <div class="panel ccp-contact_panel">
+                    <div class="ccp-contact_panel-heading"><span class="ccp-ver-align">Please fill out the form below to have your questions answered.</span></div>
+                    <div class="panel-body ccp-contactcontent">
+                        <div class="col-md-12 ccp-contact_row">
+                            <div class="col-md-5">
+                                <label for="ccp-con-us-fName">First Name <span  class="ccp-impcls">*</span></label>
+                                <input class="form-control" type="Text" id="ccp-con-us-fName" ></input>
+                            </div>
+                            <div class="col-md-2"></div>
+                            <div class="col-md-5">
+                                <label for="ccp-con-us-lName">Last Name <span class="ccp-impcls">*</span></label>
+                                <input class="form-control" type="Text" id="ccp-con-us-lName"></input>
+                            </div>
+                        </div>
+                        <div class="col-md-12 ccp-contact_row">
+                            <div class="col-md-5">
+                                <label for="ccp-con-us-email">Email <span  class="ccp-impcls">*</span></label>
+                                <input class="form-control" type="text" id="ccp-con-us-email"></input>
+                            </div>
+                            <div class="col-md-2"></div>
+                            <div class="col-md-5">
+                                <label for="ccp-con-us-phone">Phone number with country code <span  class="ccp-impcls">*</span></label>
+                                <input class="form-control" type="text" id="ccp-con-us-phone" ></input>
+                            </div>
+                        </div>
+                        <div class="col-md-12 ccp-contact_row">
+                            <div class="col-md-5">
+                                <label>Action type <span  class="ccp-impcls">*</span></label>
+                                <select class="form-control select_opt" id="actionType-select">
+                                    <option value="contact-ge-rep">Contact GE representative</option>
+                                    <option value="report-an-issue">Report an Issue</option>
+                                </select>
+                            </div>
+                            <div class="col-md-2"></div>
+                            <div class="col-md-5">
+                                <label for="ccp-con-us-file-upload">Attach File</label>
+                                <input aura:id="file" type="file" />
+                                <span class="ccp-con-us-instruc">Max file size: 1 MB<br />File types supported: *.pdf, *.xlsx, *.xls, *.docx, *.doc, *.jpeg, *.bmp, *.png, *.zip</span>
+                            </div>
+                        </div>
+                        <div class="col-md-12 ccp-contact_comentrow">
+                            <label>Questions/Comments <span  class="ccp-impcls">*</span></label>
+                            <textarea class="form-control ccp-txtareacls" id="ccp-con-us-comments"></textarea>
+                        </div>
+                        <div class="col-md-12 ccp-contact_comentrow clearfix">
+                            <button type="button" class="form-control ccp-submitbtn" id="ccp-contact-submit" onclick="{!c.sendEmail}">SUBMIT</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3"></div>
+    </div>
+</aura:component>
